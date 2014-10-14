@@ -62,6 +62,8 @@ class KeyboardViewController: UIInputViewController {
     ["⚙", "⌥", " ", "←", "↵"]
   ]
   
+  var keyboardRowViews: [UIView] = []
+  
   var dvorakActive = true
   var shiftStateActive = false
   var altStateActive = false
@@ -79,15 +81,15 @@ class KeyboardViewController: UIInputViewController {
     
 //    let keyboardHeight: CGFloat = 253
 //    
-//    let heightConstraint = NSLayoutConstraint(item: self.view, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: keyboardHeight)
+//    let heightConstraint = NSLayoutConstraint(item: self.inputView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: keyboardHeight)
 //    
-//    self.view.addConstraint(heightConstraint)
+//    self.inputView.addConstraint(heightConstraint)
   }
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    self.loadActiveKeyState()
+    self.createKeys()
     
     
     
@@ -103,11 +105,11 @@ class KeyboardViewController: UIInputViewController {
 //    
 //    self.nextKeyboardButton.addTarget(self, action: "advanceToNextInputMode", forControlEvents: .TouchUpInside)
 //    
-//    self.view.addSubview(self.nextKeyboardButton)
+//    self.inputView.addSubview(self.nextKeyboardButton)
 //    
-//    var nextKeyboardButtonLeftSideConstraint = NSLayoutConstraint(item: self.nextKeyboardButton, attribute: .Left, relatedBy: .Equal, toItem: self.view, attribute: .Left, multiplier: 1.0, constant: 0.0)
-//    var nextKeyboardButtonBottomConstraint = NSLayoutConstraint(item: self.nextKeyboardButton, attribute: .Bottom, relatedBy: .Equal, toItem: self.view, attribute: .Bottom, multiplier: 1.0, constant: 0.0)
-//    self.view.addConstraints([nextKeyboardButtonLeftSideConstraint, nextKeyboardButtonBottomConstraint])
+//    var nextKeyboardButtonLeftSideConstraint = NSLayoutConstraint(item: self.nextKeyboardButton, attribute: .Left, relatedBy: .Equal, toItem: self.inputView, attribute: .Left, multiplier: 1.0, constant: 0.0)
+//    var nextKeyboardButtonBottomConstraint = NSLayoutConstraint(item: self.nextKeyboardButton, attribute: .Bottom, relatedBy: .Equal, toItem: self.inputView, attribute: .Bottom, multiplier: 1.0, constant: 0.0)
+//    self.inputView.addConstraints([nextKeyboardButtonLeftSideConstraint, nextKeyboardButtonBottomConstraint])
   }
   
   override func didReceiveMemoryWarning() {
@@ -132,9 +134,23 @@ class KeyboardViewController: UIInputViewController {
 //    self.nextKeyboardButton.setTitleColor(textColor, forState: .Normal)
   }
   
+  func createKeys()
+  {
+    for keys in self.dvorakKeyStates {
+      var rowView = createRowOfButtons(keys)
+      
+      self.inputView.addSubview(rowView)
+      
+      rowView.setTranslatesAutoresizingMaskIntoConstraints(false)
+      
+      self.keyboardRowViews.append(rowView)
+    }
+    addConstraintsToInputView(self.inputView, rowViews: self.keyboardRowViews)
+  }
+  
   func loadActiveKeyState()
   {
-    var keyStates = self.dvorakActive ? self.dvorakKeyStates : self.quertyKeyStates
+    var keyStates = self.dvorakKeyStates
     if (!self.dvorakActive) {
       keyStates = quertyKeyStates
     }
@@ -147,21 +163,22 @@ class KeyboardViewController: UIInputViewController {
       keyStates = self.altKeyStates
     }
     
-    for view in self.view.subviews {
-      view.removeFromSuperview()
+    for (rowIndex, keys) in enumerate(keyStates) {
+      let rowView = self.keyboardRowViews[rowIndex] as UIView
+      
+      for (colIndex, title) in enumerate(keys) {
+        let keyView = rowView.subviews[colIndex] as UIButton
+        
+        keyView.titleLabel!.text = title
+        keyView.setTitle(title, forState: .Normal)
+        
+        if title == "↑" {
+          keyView.backgroundColor = UIColor(white: self.shiftStateActive ? 0.75 : 1.0, alpha: 1.0)
+        } else if title == "⌥" {
+          keyView.backgroundColor = UIColor(white: self.altStateActive ? 0.75 : 1.0, alpha: 1.0)
+        }
+      }
     }
-    
-    var rows: [UIView] = []
-    for keys in keyStates {
-      var rowView = createRowOfButtons(keys)
-      
-      self.view.addSubview(rowView)
-      
-      rowView.setTranslatesAutoresizingMaskIntoConstraints(false)
-      
-      rows.append(rowView)
-    }
-    addConstraintsToInputView(self.view, rowViews: rows)
   }
   
   func createRowOfButtons(buttonTitles: [NSString]) -> UIView {
