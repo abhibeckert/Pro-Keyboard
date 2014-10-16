@@ -62,9 +62,13 @@ class KeyboardViewController: UIInputViewController {
     ["⚙", "⌥", " ", "←", "↵"]
   ]
   
+  var activeKeyStates: [[String]] = []
+  
+  var keyLayers: [[CATextLayer]] = []
+  
   var keyboardRowViews: [UIView] = []
   
-  var dvorakActive = true
+  var dvorakActive = false
   var shiftStateActive = false
   var altStateActive = false
   
@@ -74,27 +78,79 @@ class KeyboardViewController: UIInputViewController {
   let landscapeHeight = 203.0
   var isLandscape = false
   
+  var keypressGestureRecognizer: KeyboardPressGestureRecognizer!
+  
+  override init()
+  {
+    super.init()
+  }
+  
+  override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?)
+  {
+    super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+  }
+
+  required init(coder aDecoder: NSCoder) {
+      fatalError("init(coder:) has not been implemented")
+  }
+  
 //  @IBOutlet var nextKeyboardButton: UIButton!
   
   override func updateViewConstraints() {
     super.updateViewConstraints()
+    
     
 //    let keyboardHeight: CGFloat = 253
 //    
 //    let heightConstraint = NSLayoutConstraint(item: self.inputView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0, constant: keyboardHeight)
 //    
 //    self.inputView.addConstraint(heightConstraint)
+    
+    self.updateKeys()
   }
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    self.createKeys()
+    self.keypressGestureRecognizer = KeyboardPressGestureRecognizer({(key: String) -> () in
+      self.keyPressed(key)
+    })
+    self.keypressGestureRecognizer.keyTitles = self.dvorakKeyStates
     
+//    self.createKeys()
     
+    let keyboardView = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    keyboardView.addGestureRecognizer(self.keypressGestureRecognizer)
+    self.inputView.addSubview(keyboardView)
+    
+    keyboardView.setTranslatesAutoresizingMaskIntoConstraints(false)
+    
+    self.inputView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("H:|[view]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": keyboardView]))
+    self.inputView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[view]|", options: NSLayoutFormatOptions(), metrics: nil, views: ["view": keyboardView]))
+    
+    let scale = UIScreen.mainScreen().scale
+    
+    for keys in self.dvorakKeyStates {
+      var layers: [CATextLayer] = []
+      for title in keys {
+        let layer = CATextLayer()
+        
+        layer.contentsScale = scale
+        layer.alignmentMode = "center"
+        layer.fontSize = 21
+        layer.font = UIFont.boldSystemFontOfSize(layer.fontSize)
+        layer.foregroundColor = UIColor.blackColor().CGColor
+        
+        layers.append(layer)
+        keyboardView.layer.addSublayer(layer)
+      }
+      self.keyLayers.append(layers)
+    }
     
     self.heightConstraint = NSLayoutConstraint(item: self.inputView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0.0, constant: CGFloat(self.portraitHeight))
-      
+    
+    self.loadActiveKeyState()
+    
       //[NSLayoutConstraint constraintWithItem:self.inputView attribute:NSLayoutAttributeHeight relatedBy:NSLayoutRelationEqual toItem:nil attribute:NSLayoutAttributeNotAnAttribute multiplier:0.0 constant:self.portraitHeight];
     
 //    self.nextKeyboardButton = UIButton.buttonWithType(.System) as UIButton
@@ -163,22 +219,10 @@ class KeyboardViewController: UIInputViewController {
       keyStates = self.altKeyStates
     }
     
-    for (rowIndex, keys) in enumerate(keyStates) {
-      let rowView = self.keyboardRowViews[rowIndex] as UIView
-      
-      for (colIndex, title) in enumerate(keys) {
-        let keyView = rowView.subviews[colIndex] as UIButton
-        
-        keyView.titleLabel!.text = title
-        keyView.setTitle(title, forState: .Normal)
-        
-        if title == "↑" {
-          keyView.backgroundColor = UIColor(white: self.shiftStateActive ? 0.75 : 1.0, alpha: 1.0)
-        } else if title == "⌥" {
-          keyView.backgroundColor = UIColor(white: self.altStateActive ? 0.75 : 1.0, alpha: 1.0)
-        }
-      }
-    }
+    self.activeKeyStates = keyStates
+    
+    self.updateKeys()
+    self.keypressGestureRecognizer.keyTitles = self.activeKeyStates
   }
   
   func createRowOfButtons(buttonTitles: [NSString]) -> UIView {
@@ -313,12 +357,16 @@ class KeyboardViewController: UIInputViewController {
   }
   
   func didTapButton(sender: AnyObject?) {
-    
     let button = sender as UIButton
     let title = button.titleForState(.Normal) as String!
-    var proxy = textDocumentProxy as UITextDocumentProxy
+    self.keyPressed(title)
+  }
+  
+  func keyPressed(key: String)
+  {
+    var proxy = self.textDocumentProxy as UITextDocumentProxy
     
-    switch title {
+    switch key {
     case "←" :
       proxy.deleteBackward()
     case "↵" :
@@ -335,7 +383,51 @@ class KeyboardViewController: UIInputViewController {
       self.dvorakActive = !self.dvorakActive
       self.loadActiveKeyState()
     default :
-      proxy.insertText(title)
+      proxy.insertText(key)
     }
+  }
+  
+  func updateKeys()
+  {
+    CATransaction.begin()
+    CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+    
+    var x: CGFloat = 0
+    var y: CGFloat = 0
+    var rowHeight = self.inputView.frame.size.height / 5
+    var colWidth = self.inputView.frame.size.width / 10
+    
+    var yOffset = floor(rowHeight * 0.15) // make text center aligned
+    
+    var rowIndex = 0
+    var colIndex = 0
+    
+    for row in self.keyLayers {
+      for keyLayer in row {
+        var cellWidth = colWidth
+        
+        let title = self.activeKeyStates[rowIndex][colIndex]
+        switch title {
+        case "←", "↵", "⌥", "⚙", "⊙":
+          cellWidth *= 1.5
+        case " ":
+          cellWidth *= 4
+        default:
+          break
+        }
+        
+        keyLayer.frame = CGRect(x: x, y: y + yOffset, width: cellWidth, height: rowHeight)
+        keyLayer.string = title
+        
+        x += cellWidth
+        colIndex++
+      }
+      y += rowHeight
+      x = 0
+      colIndex = 0
+      rowIndex++
+    }
+    
+    CATransaction.commit()
   }
 }
