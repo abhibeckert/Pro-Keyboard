@@ -13,13 +13,15 @@ import UIKit
 class KeyboardPressGestureRecognizer: UIGestureRecognizer
 {
   var keyTitles: [[String]]
-  let callback: (key: String) -> ()
+  let touchBeganCallback: (touch: UITouch) -> ()
+  let touchEndedCallback: (touch: UITouch) -> ()
   
-  init(callback:(key: String) -> ())
+  init(touchBegan:(touch: UITouch) -> (), touchEnded:(touch: UITouch) -> ())
   {
     self.keyTitles = [[]]
     
-    self.callback = callback
+    self.touchBeganCallback = touchBegan
+    self.touchEndedCallback = touchEnded
     
     super.init(target: "", action: "count")
   }
@@ -34,36 +36,21 @@ class KeyboardPressGestureRecognizer: UIGestureRecognizer
   func touchesBegan(touches: NSSet!, withEvent event: UIEvent!)
   {
     for touch in touches {
-      let title = self.keyTitleForPosition(touch.locationInView(nil))
-      
-      self.callback(key:title)
+      self.touchBeganCallback(touch:touch as UITouch)
     }
   }
   
-  
-  func keyTitleForPosition(location: CGPoint) -> String
+  func touchesEnded(touches: NSSet, withEvent event: UIEvent)
   {
-    let rowHeight = Float(self.view!.frame.size.height) / Float(keyTitles.count)
-    let row = floor(Float(location.y) / rowHeight)
-    
-    
-    let columnWidth = Float(self.view!.frame.size.width) / Float(keyTitles[0].count)
-    var column = Float(location.x) / columnWidth
-    
-    if (Int(floor(row)) == 4) {
-      if column < 1.5 {
-        column = 0
-      } else if column < 3 {
-        column = 1
-      } else if (column < 7) {
-        column = 2
-      } else if (column < 8.5) {
-        column = 3
-      } else {
-        column = 4
-      }
+    for touch in touches {
+      self.touchEndedCallback(touch:touch as UITouch)
     }
-    
-    return keyTitles[Int(floor(row))][Int(floor(column))]
+  }
+  
+  func touchesCancelled(touches: NSSet!, withEvent event: UIEvent!)
+  {
+    for touch in touches {
+      self.touchEndedCallback(touch:touch as UITouch)
+    }
   }
 }

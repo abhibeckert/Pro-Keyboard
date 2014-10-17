@@ -64,7 +64,7 @@ class KeyboardViewController: UIInputViewController {
   
   var activeKeyStates: [[String]] = []
   
-  var keyLayers: [[CATextLayer]] = []
+  var keyLayers: [[KeyLayer]] = []
   
   var keyboardRowViews: [UIView] = []
   
@@ -77,6 +77,8 @@ class KeyboardViewController: UIInputViewController {
   let portraitHeight = 253.0
   let landscapeHeight = 203.0
   var isLandscape = false
+  
+  var highlightedKeys: [(key:String, touch:UITouch)] = []
   
   var keypressGestureRecognizer: KeyboardPressGestureRecognizer!
   
@@ -112,8 +114,23 @@ class KeyboardViewController: UIInputViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    self.keypressGestureRecognizer = KeyboardPressGestureRecognizer({(key: String) -> () in
-      self.keyPressed(key)
+    self.keypressGestureRecognizer = KeyboardPressGestureRecognizer({(touch: UITouch) -> () in
+      let title = self.keyTitleForPosition(touch.locationInView(nil))
+      
+      self.highlightedKeys.append((key:title, touch:touch))
+      
+      self.keyPressed(title)
+      }, touchEnded: {(touch: UITouch) -> () in
+        var newHighlightedKeys: [(key:String, touch:UITouch)] = []
+        
+        for highlightedKey in self.highlightedKeys {
+          if highlightedKey.touch != touch {
+            newHighlightedKeys.append(highlightedKey)
+          }
+        }
+        self.highlightedKeys = newHighlightedKeys
+        
+        self.updateKeys()
     })
     self.keypressGestureRecognizer.keyTitles = self.dvorakKeyStates
     
@@ -131,15 +148,11 @@ class KeyboardViewController: UIInputViewController {
     let scale = UIScreen.mainScreen().scale
     
     for keys in self.dvorakKeyStates {
-      var layers: [CATextLayer] = []
+      var layers: [KeyLayer] = []
       for title in keys {
-        let layer = CATextLayer()
+        let layer = KeyLayer()
         
         layer.contentsScale = scale
-        layer.alignmentMode = "center"
-        layer.fontSize = 21
-        layer.font = UIFont.boldSystemFontOfSize(layer.fontSize)
-        layer.foregroundColor = UIColor.blackColor().CGColor
         
         layers.append(layer)
         keyboardView.layer.addSublayer(layer)
@@ -369,10 +382,13 @@ class KeyboardViewController: UIInputViewController {
     switch key {
     case "←" :
       proxy.deleteBackward()
+      self.updateKeys()
     case "↵" :
       proxy.insertText("\n")
+      self.updateKeys()
     case "⊙" :
       self.advanceToNextInputMode()
+      self.updateKeys()
     case "↑":
       self.shiftStateActive = !self.shiftStateActive
       self.loadActiveKeyState()
@@ -384,6 +400,7 @@ class KeyboardViewController: UIInputViewController {
       self.loadActiveKeyState()
     default :
       proxy.insertText(key)
+      self.updateKeys()
     }
   }
   
@@ -397,14 +414,13 @@ class KeyboardViewController: UIInputViewController {
     var rowHeight = self.inputView.frame.size.height / 5
     var colWidth = self.inputView.frame.size.width / 10
     
-    var yOffset = floor(rowHeight * 0.15) // make text center aligned
-    
     var rowIndex = 0
     var colIndex = 0
     
     for row in self.keyLayers {
       for keyLayer in row {
         var cellWidth = colWidth
+        
         
         let title = self.activeKeyStates[rowIndex][colIndex]
         switch title {
@@ -416,8 +432,26 @@ class KeyboardViewController: UIInputViewController {
           break
         }
         
-        keyLayer.frame = CGRect(x: x, y: y + yOffset, width: cellWidth, height: rowHeight)
-        keyLayer.string = title
+        var active = false
+        if title == "↑" && self.shiftStateActive {
+          active = true
+        } else if title == "⌥" && self.altStateActive {
+          active = true
+        } else {
+          for highlightedKey in self.highlightedKeys {
+            if highlightedKey.key == title {
+              active = true
+              break
+            }
+          }
+        }
+        
+        if ((fabs(keyLayer.frame.size.width - cellWidth) > 0.1) || keyLayer.active != active || keyLayer.key != title) {
+          keyLayer.frame = CGRect(x: x, y: y, width: cellWidth, height: rowHeight)
+          keyLayer.key = title
+          keyLayer.active = active
+          keyLayer.setNeedsDisplay()
+        }
         
         x += cellWidth
         colIndex++
@@ -429,5 +463,31 @@ class KeyboardViewController: UIInputViewController {
     }
     
     CATransaction.commit()
+  }
+  
+  func keyTitleForPosition(location: CGPoint) -> String
+  {
+    let rowHeight = Float(self.inputView.frame.size.height) / Float(self.activeKeyStates.count)
+    let row = floor(Float(location.y) / rowHeight)
+    
+    
+    let columnWidth = Float(self.inputView.frame.size.width) / Float(self.activeKeyStates[0].count)
+    var column = Float(location.x) / columnWidth
+    
+    if (Int(floor(row)) == 4) {
+      if column < 1.5 {
+        column = 0
+      } else if column < 3 {
+        column = 1
+      } else if (column < 7) {
+        column = 2
+      } else if (column < 8.5) {
+        column = 3
+      } else {
+        column = 4
+      }
+    }
+    
+    return self.activeKeyStates[Int(floor(row))][Int(floor(column))]
   }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		381EDC2319F0D6B40020ED98 /* KeyLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381EDC2219F0D6B40020ED98 /* KeyLayer.swift */; };
 		3873847719E9F823007AE1CA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3873847619E9F823007AE1CA /* AppDelegate.swift */; };
 		3873847919E9F823007AE1CA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3873847819E9F823007AE1CA /* ViewController.swift */; };
 		3873847C19E9F823007AE1CA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3873847A19E9F823007AE1CA /* Main.storyboard */; };
@@ -57,6 +58,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		381EDC2219F0D6B40020ED98 /* KeyLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyLayer.swift; sourceTree = "<group>"; };
 		3873847119E9F823007AE1CA /* Pro Keyboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Pro Keyboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3873847519E9F823007AE1CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3873847619E9F823007AE1CA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 			children = (
 				3873849E19E9F9D6007AE1CA /* KeyboardViewController.swift */,
 				38EEB03519ECD78A003C7C08 /* KeyboardPressGestureRecognizer.swift */,
+				381EDC2219F0D6B40020ED98 /* KeyLayer.swift */,
 				3873849C19E9F9D6007AE1CA /* Supporting Files */,
 			);
 			path = "Pro Keyboard Extension";
@@ -324,6 +327,7 @@
 			files = (
 				38EEB03619ECD78A003C7C08 /* KeyboardPressGestureRecognizer.swift in Sources */,
 				3873849F19E9F9D6007AE1CA /* KeyboardViewController.swift in Sources */,
+				381EDC2319F0D6B40020ED98 /* KeyLayer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
