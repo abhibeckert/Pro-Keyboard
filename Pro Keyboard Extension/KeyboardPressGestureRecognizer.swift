@@ -12,26 +12,16 @@ import UIKit
 
 class KeyboardPressGestureRecognizer: UIGestureRecognizer
 {
-  var keyTitles: [[String]]
   let touchBeganCallback: (touch: UITouch) -> ()
   let touchEndedCallback: (touch: UITouch) -> ()
   
   init(touchBegan:(touch: UITouch) -> (), touchEnded:(touch: UITouch) -> ())
   {
-    self.keyTitles = [[]]
-    
     self.touchBeganCallback = touchBegan
     self.touchEndedCallback = touchEnded
     
     super.init(target: "", action: "count")
   }
-//  
-//  override init(target: AnyObject, action: Selector)
-//  {
-//    self.keyTitles = [[]]
-//    
-//    super.init(target: target, action: action)
-//  }
   
   func touchesBegan(touches: NSSet!, withEvent event: UIEvent!)
   {
