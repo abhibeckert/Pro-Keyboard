@@ -40,14 +40,15 @@ class KeyLayer: CALayer
     let componentCount : UInt = 2
     
     var colourComponents : [CGFloat] = [
-      0,   0,   0,   1,
-      0.1, 0.1, 0.1, 1,
+      1, 1, 1, 1,
+      0.9,   0.9,   0.9,   1,
     ]
     if (self.active) {
       colourComponents = [
-        0.248, 0.365, 0.483, 1,
-        0.348, 0.465, 0.583, 1,
-        // 0.298, 0.415, 0.533
+//        0.248, 0.365, 0.483, 1,
+//        0.348, 0.465, 0.583, 1,
+        0.39, 0.82, 1.00, 1.0,
+        0.19, 0.62, 0.87, 1.0,
       ]
     }
     
@@ -62,23 +63,28 @@ class KeyLayer: CALayer
     
     // lines between keys
     CGContextSetLineWidth(context, 0.5);
-    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [1, 1, 1, 0.3]));
+    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [0, 0, 0, 0.3]));
     
     CGContextBeginPath(context);
-    CGContextMoveToPoint(context, 0, 0);
-    CGContextAddLineToPoint(context, self.bounds.size.width, 0);
+    CGContextMoveToPoint(context, self.bounds.size.width, 0);
+    CGContextAddLineToPoint(context, self.bounds.size.width, self.bounds.size.height);
     CGContextStrokePath(context);
+    
+    CGContextBeginPath(context);
+    CGContextMoveToPoint(context, 0, self.bounds.size.height);
+    CGContextAddLineToPoint(context, self.bounds.size.width, self.bounds.size.height);
+    CGContextStrokePath(context);
+    
+    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [1, 1, 1, 1.0]));
     
     CGContextBeginPath(context);
     CGContextMoveToPoint(context, 0, 0);
     CGContextAddLineToPoint(context, 0, self.bounds.size.height);
     CGContextStrokePath(context);
     
-    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [0, 0, 0, 1]));
-    
     CGContextBeginPath(context);
-    CGContextMoveToPoint(context, self.bounds.size.width, 0);
-    CGContextAddLineToPoint(context, self.bounds.size.width, self.bounds.size.height);
+    CGContextMoveToPoint(context, 0, 0.2);
+    CGContextAddLineToPoint(context, self.bounds.size.width, 0.2);
     CGContextStrokePath(context);
     
     
@@ -92,12 +98,8 @@ class KeyLayer: CALayer
     
     // load
     let font = CTFontCreateWithName("Avenir-Roman", 21, nil)
-    let attributes = [kCTForegroundColorAttributeName:UIColor.whiteColor().CGColor, kCTFontAttributeName: font]
+    let attributes = [kCTForegroundColorAttributeName:UIColor.blackColor().CGColor, kCTFontAttributeName: font]
     let attributedString = NSAttributedString(string: self.key, attributes: attributes)
-    
-//    layer.alignmentMode = "center"
-//    layer.fontSize = 21
-//    layer.font = UIFont.boldSystemFontOfSize(layer.fontSize)
     
     let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
     let line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, CFAttributedStringGetLength(attributedString)))
