@@ -206,10 +206,12 @@ class KeyboardViewController: UIInputViewController {
     
     let scale = UIScreen.mainScreen().scale
     
+    var isFirstRow = true
     for keyRow in self.quertyKeys {
       var layers: [KeyLayer] = []
       for key in keyRow {
         let layer = KeyLayer()
+        layer.isFirstRow = isFirstRow
         
         layer.contentsScale = scale
         
@@ -217,6 +219,7 @@ class KeyboardViewController: UIInputViewController {
         keyboardView.layer.addSublayer(layer)
       }
       self.keyLayers.append(layers)
+      isFirstRow = false;
     }
     
     self.heightConstraint = NSLayoutConstraint(item: self.inputView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 0.0, constant: CGFloat(self.portraitHeight))
@@ -347,8 +350,8 @@ class KeyboardViewController: UIInputViewController {
     
     var x: CGFloat = 0
     var y: CGFloat = 0
-    var rowHeight = self.inputView.frame.size.height / 5
-    var colWidth = self.inputView.frame.size.width / 10
+    var rowHeight = ceil(self.inputView.frame.size.height / 5)
+    var colWidth = ceil(self.inputView.frame.size.width / 10)
     
     var rowIndex = 0
     var colIndex = 0
@@ -362,6 +365,7 @@ class KeyboardViewController: UIInputViewController {
         switch title {
         case "←", "↵", "⌥", "⚙", "⊙":
           cellWidth *= 1.5
+          cellWidth = ceil(cellWidth)
         case " ":
           cellWidth *= 4
         default:
@@ -383,7 +387,17 @@ class KeyboardViewController: UIInputViewController {
         }
         
         if ((fabs(keyLayer.frame.size.width - cellWidth) > 0.1) || keyLayer.active != active || keyLayer.key != title) {
-          keyLayer.frame = CGRect(x: x, y: y, width: cellWidth, height: rowHeight)
+          var h = rowHeight
+          if (y + h > self.inputView.frame.size.height) {
+            h = self.inputView.frame.size.height - y
+          }
+          
+          var w = cellWidth
+          if (x + w > self.inputView.frame.size.width) {
+            w = self.inputView.frame.size.width - x
+          }
+          
+          keyLayer.frame = CGRect(x: x, y: y, width: w, height: h)
           keyLayer.key = title
           keyLayer.active = active
           keyLayer.setNeedsDisplay()

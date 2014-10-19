@@ -13,6 +13,8 @@ class KeyLayer: CALayer
   var key = ""
   var active = false
   
+  var isFirstRow = false
+  
   override init()
   {
     super.init()
@@ -66,7 +68,11 @@ class KeyLayer: CALayer
     CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [0, 0, 0, 0.3]));
     
     CGContextBeginPath(context);
-    CGContextMoveToPoint(context, self.bounds.size.width, 0);
+    if self.isFirstRow {
+      CGContextMoveToPoint(context, self.bounds.size.width, 0.5);
+    } else {
+      CGContextMoveToPoint(context, self.bounds.size.width, 0);
+    }
     CGContextAddLineToPoint(context, self.bounds.size.width, self.bounds.size.height);
     CGContextStrokePath(context);
     
@@ -75,17 +81,34 @@ class KeyLayer: CALayer
     CGContextAddLineToPoint(context, self.bounds.size.width, self.bounds.size.height);
     CGContextStrokePath(context);
     
-    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [1, 1, 1, 1.0]));
+    if self.isFirstRow {
+      CGContextBeginPath(context);
+      CGContextMoveToPoint(context, 0, 0.25);
+      CGContextAddLineToPoint(context, self.bounds.size.width, 0.25);
+      CGContextStrokePath(context);
+    }
+    
+    CGContextSetStrokeColorWithColor(context, CGColorCreate(colorSpace, [1, 1, 1, 0.3]));
     
     CGContextBeginPath(context);
-    CGContextMoveToPoint(context, 0, 0);
+    if self.isFirstRow {
+      CGContextMoveToPoint(context, 0, 0.5);
+    } else {
+      CGContextMoveToPoint(context, 0, 0);
+    }
     CGContextAddLineToPoint(context, 0, self.bounds.size.height);
     CGContextStrokePath(context);
     
     CGContextBeginPath(context);
-    CGContextMoveToPoint(context, 0, 0.2);
-    CGContextAddLineToPoint(context, self.bounds.size.width, 0.2);
+    if self.isFirstRow {
+      CGContextMoveToPoint(context, 0, 0.5);
+      CGContextAddLineToPoint(context, self.bounds.size.width, 0.5);
+    } else {
+      CGContextMoveToPoint(context, 0, 0);
+      CGContextAddLineToPoint(context, self.bounds.size.width, 0);
+    }
     CGContextStrokePath(context);
+    
     
     
     // Flip the coordinate system
@@ -96,7 +119,7 @@ class KeyLayer: CALayer
     
     
     
-    // load
+    // draw title
     let font = CTFontCreateWithName("Avenir-Roman", 21, nil)
     let attributes = [kCTForegroundColorAttributeName:UIColor.blackColor().CGColor, kCTFontAttributeName: font]
     let attributedString = NSAttributedString(string: self.key, attributes: attributes)
@@ -109,9 +132,18 @@ class KeyLayer: CALayer
     let framesetter = CTFramesetterCreateWithAttributedString(attributedString)
     let frameSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRange(location: 0, length: attributedString.length), nil, CGSize(width: CGFloat.max, height: CGFloat.max), nil)
     
+    let x = (self.bounds.size.width / 2) - (frameSize.width / 2)
+    var y = (self.bounds.size.height / 2) - (frameSize.height / 2) + 6.5
     
+    if self.key == "←" {
+      y -= 4.2
+    } else if self.key == "↑" {
+      y -= 3
+    } else if self.key == "⊙" {
+      y -= 3.5
+    }
     
-    CGContextSetTextPosition(context, (self.bounds.size.width / 2) - (frameSize.width / 2), (self.bounds.size.height / 2) - (frameSize.height / 2) + 5.5)
+    CGContextSetTextPosition(context, x, y)
     CTLineDraw(line, context)
     
     CGContextRestoreGState(context)
